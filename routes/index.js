@@ -1,5 +1,6 @@
 // routes/index.js
 const Publication = require("../models/Publication");
+import { createClient } from "@supabase/supabase-js";
 const express = require("express");
 const router = express.Router();
 const Razorpay = require("razorpay");
@@ -17,6 +18,12 @@ router.use("/auth", authRoutes);
 router.use("/subscription", subscriptionRoutes);*/
 router.use("/newsletter", newsletterRoutes);
 router.use("/publications", publicationRoutes);
+
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = "https://bhvsrkbphpnhepmfqyom.supabase.co";
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 router.post("/subscribe", async (req, res) => {
   try {
     const amount = 25000;
@@ -35,12 +42,36 @@ router.post("/payment/confirm", async (req, res) => {
     const paymentId = req.body.paymentId;
     const publicationId = req.body.publicationId;
     const userId = req.body.userId;
+
+    const amount = 250;
+
     // Verify payment with Razorpay
     const payment = await verifyPayment(paymentId);
-    // If payment successful, add user to publication's subscribers
+
+    // If payment successful, add user to publication's subscribers and insert payment details into Supabase
     if (payment.status === "captured") {
       await addSubscriberToPublication(userId, publicationId);
-      res.json({ success: true });
+
+      // Insert payment details into Supabase payments table
+      const { data, error } = await supabase.from("payments").insert([
+        {
+          amount: amount,
+          payment_id: paymentId,
+          publication_id: publicationId,
+          user_id: userId,
+        },
+      ]);
+
+      if (error) {
+        console.error(
+          "Error inserting payment details into Supabase:",
+          error.message
+        );
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        console.log("Payment details inserted into Supabase successfully");
+        res.json({ success: true });
+      }
     } else {
       res.json({ success: false, message: "Payment not successful" });
     }
@@ -49,7 +80,6 @@ router.post("/payment/confirm", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 // Razorpay Integration
 
 // Function to create Razorpay order
