@@ -1,6 +1,7 @@
 // routes/index.js
 const Publication = require("../models/Publication");
-import { createClient } from "@supabase/supabase-js";
+const { createClient } = require("@supabase/supabase-js");
+
 const express = require("express");
 const router = express.Router();
 const Razorpay = require("razorpay");
