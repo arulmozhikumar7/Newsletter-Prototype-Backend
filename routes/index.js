@@ -20,8 +20,6 @@ router.use("/subscription", subscriptionRoutes);*/
 router.use("/newsletter", newsletterRoutes);
 router.use("/publications", publicationRoutes);
 
-import { createClient } from "@supabase/supabase-js";
-
 const supabaseUrl = "https://bhvsrkbphpnhepmfqyom.supabase.co";
 const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
